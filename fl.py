@@ -43,7 +43,7 @@ data_transforms = {
 
 
 
-batch_size = 4
+batch_size = 4  #一次从数据集中取4张图片组成一个batch送进模型
 #构建数据集
 image_datasets = {x: datasets.ImageFolder(os.path.join(data_dir, x), data_transforms[x]) for x in ['train', 'valid']}
 #batch单位取数据
@@ -52,9 +52,11 @@ dataloaders = {x: torch.utils.data.DataLoader(image_datasets[x], batch_size=batc
 dataset_sizes = {x: len(image_datasets[x]) for x in ['train', 'valid']}
 class_names = image_datasets['train'].classes
 
-#名字字符串
+
+#名字字符串 读取标签对应的实际名字
 with open('cat_to_name.json', 'r') as f:
     cat_to_name = json.load(f)
+
 
 
 
@@ -63,14 +65,13 @@ model_name = 'resnet'
 feature_extract = True #是否用人家训练好的特征来做
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu") #用GPU/CPU来跑
 
+
 #冻结/解冻数据
 #冻结所有参数
 def set_parameter_requires_grad(model, feature_extracting):
     if feature_extracting:
         for param in model.parameters():
             param.requires_grad = False      #冻结所有  除非后续手动修改某些层的requires_grad
-
-
 
 
 
@@ -93,13 +94,14 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         return model_ft, input_size
 
 
+
+
 #设置哪些层需要训练 调用initialize_model
 model_ft, input_size = initialize_model(model_name, 102, feature_extract, use_pretrained=True)
 #GPU计算
 model_ft = model_ft.to(device) #将模型移动到指定的计算设备
 #模型保存
 filename='checkpoint.pth'
-
 
 
 # 是否训练所有层（只是打印）
@@ -233,4 +235,5 @@ def train_model(model, dataloaders, criterion, optimizer, num_epochs=25, is_ince
 
 
 #开始训练
+
 model_ft, val_acc_history, train_acc_history, valid_losses, train_losses, LRs = train_model(model_ft, dataloaders, criterion, optimizer_ft, num_epochs=20, is_inception=(model_name=="inception"))
